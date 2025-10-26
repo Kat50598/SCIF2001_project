@@ -78,6 +78,18 @@ def main():
         logger.debug("\nEvent ID dictionary created by MNE:")
         logger.debug(event_id)
 
+        # --------------------------------
+        # ---- Actual Data Cleaning  -----
+        # --------------------------------
+
+        #Band and notch filter applied  
+        raw.filter(l_freq=0.5, h_freq=100, fir_design='firwin')
+        raw.notch_filter(freqs=50, fir_design='firwin')
+        
+
+        # ----------------------------------------------------------------
+        # ---- Parititioning cleaned data into 30 sec Epoch Objects  -----
+        # ----------------------------------------------------------------
         epochs = mne.Epochs(
             raw=raw,
             events=events,
@@ -91,13 +103,7 @@ def main():
         logger.info("\nCreated epochs object:")
         logger.info(epochs)
 
-        epochs.filter(l_freq=0.3, h_freq=35)
-        logger.debug("\nApplied band-pass filter (0.3-35 Hz).")
-
-        # epochs.notch_filter(freqs=50)
-
-        logger.info("\nApplied artifact rejection and dropped bad epochs.")
-        logger.info("Epochs remaining:", len(epochs))
+        logger.info("Epochs made:", len(epochs))
 
         cleaned_epochs_fname = os.path.join(output_path, f"{sub}_cleaned-epo.fif")
         epochs.save(cleaned_epochs_fname, overwrite=True)
