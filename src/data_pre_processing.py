@@ -30,8 +30,14 @@ def main():
         mapping_fname = (
             data_path / "ds005207" / "task-sleep_acq-cEEGridScoring_events.json"
         )
-        output_path = data_path
+        #Make output path folder and check that it didnt fail quietly
+        output_path = Path(__file__).parent.parent / "EEG_data" / "cleaned_data"
+        try:
+            os.mkdir(output_path)
+        except FileExistsError:
+            print(f"Directory '{output_path}' failed")
 
+        #Error checking to make sure the file paths exist
         assert sub_root.exists(), "Subject root does not exist"
         assert eeg_file.exists(), "EEG file file does not exist"
         assert scoring_fname.exists(), "Secoring file does not exist"

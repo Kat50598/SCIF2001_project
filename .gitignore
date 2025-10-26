@@ -209,3 +209,4 @@ __marimo__/
 # Local Ignores
 EEG_data/*
 !EEG_data/README.md
+Test_Code_Katie/*
