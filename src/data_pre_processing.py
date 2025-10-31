@@ -109,7 +109,7 @@ def main():
             event_id=event_id,
             tmin=0,
             tmax=30,
-            preload=True,  # Load epochs into memory for cleaning
+            preload=True, 
             baseline=None,
         )
 
