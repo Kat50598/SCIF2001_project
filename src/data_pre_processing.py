@@ -14,11 +14,11 @@ logger = logging.getLogger(__file__)
 # option + shift + o to organise imports
 # dpb.set_trace() to set trace for debugging
 
+
 def main():
     data_path = Path(__file__).parent.parent / "EEG_data"
 
     assert data_path.exists(), "Data path does not exist"
-
 
     dirs = os.listdir(data_path / "ds005207")
     subs = [d for d in dirs if d.startswith("sub")]
@@ -30,14 +30,16 @@ def main():
         mapping_fname = (
             data_path / "ds005207" / "task-sleep_acq-cEEGridScoring_events.json"
         )
-        #Make output path folder and check that it didnt fail quietly
+        # Make output path folder and check that it didnt fail quietly
         output_path = Path(__file__).parent.parent / "EEG_data" / "cleaned_data"
         try:
             os.mkdir(output_path)
         except FileExistsError:
             print(f"Directory '{output_path}' failed")
 
-        #Error checking to make sure the file paths exist
+        logger.debug("PATH FOR SUBJECT DATA", sub)
+
+        # Error checking to make sure the file paths exist
         assert sub_root.exists(), "Subject root does not exist"
         assert eeg_file.exists(), "EEG file file does not exist"
         assert scoring_fname.exists(), "Secoring file does not exist"
@@ -78,14 +80,25 @@ def main():
         logger.debug("\nEvent ID dictionary created by MNE:")
         logger.debug(event_id)
 
+        logger.debug("Channels in raw data", sub, "with names ", raw.ch_names)
+        # #Piece of code that removes a ll but the EEG data 
+        # #'F4:A1', 'C4:A1', 'O1:A2', 
+        # channels_to_keep = [
+        # 'F4:M1', 'C4:M1', 'O1:M2', 
+        # 'F3:M2', 'C3:M2', 'O2:M1'
+
+
+        channels_to_drop
+        raw.pick(channels_to_keep)
+        logger.debug("channels included in final data", raw.ch_names)
+
         # --------------------------------
         # ---- Actual Data Cleaning  -----
         # --------------------------------
 
-        #Band and notch filter applied  
-        raw.filter(l_freq=0.5, h_freq=100, fir_design='firwin')
-        raw.notch_filter(freqs=50, fir_design='firwin')
-        
+        # Band and notch filter applied
+        raw.filter(l_freq=0.5, h_freq=100, fir_design="firwin")
+        raw.notch_filter(freqs=50, fir_design="firwin")
 
         # ----------------------------------------------------------------
         # ---- Parititioning cleaned data into 30 sec Epoch Objects  -----
@@ -111,6 +124,6 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     main()
