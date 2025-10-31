@@ -23,6 +23,8 @@ def main():
     dirs = os.listdir(data_path / "ds005207")
     subs = [d for d in dirs if d.startswith("sub")]
 
+    df_channels = pd.DataFrame()
+
     for sub in subs:
         sub_root = data_path / "ds005207" / sub / "ses-001" / "eeg"
         eeg_file = sub_root / f"{sub}_ses-001_task-sleep_acq-PSG_eeg.set"
@@ -50,7 +52,7 @@ def main():
         # --- Main Proccessing of Data ---
         # --------------------------------
 
-        raw = mne.io.read_raw_eeglab(eeg_file, preload=True)
+        raw = mne.io.read_raw_eeglab(eeg_file, preload=True, verbose=False)
 
         with open(mapping_fname, "r") as f:
             eeg_json = json.load(f)
@@ -80,7 +82,8 @@ def main():
         logger.debug("\nEvent ID dictionary created by MNE:")
         logger.debug(event_id)
 
-        logger.debug("Channels in raw data", sub, "with names ", raw.ch_names)
+        print("Channels in raw data", sub, "with names ", raw.ch_names)
+        
         # #Piece of code that removes a ll but the EEG data 
         # #'F4:A1', 'C4:A1', 'O1:A2', 
         # channels_to_keep = [
@@ -88,8 +91,6 @@ def main():
         # 'F3:M2', 'C3:M2', 'O2:M1'
 
 
-        channels_to_drop
-        raw.pick(channels_to_keep)
         logger.debug("channels included in final data", raw.ch_names)
 
         # --------------------------------
@@ -97,8 +98,8 @@ def main():
         # --------------------------------
 
         # Band and notch filter applied
-        raw.filter(l_freq=0.5, h_freq=100, fir_design="firwin")
-        raw.notch_filter(freqs=50, fir_design="firwin")
+        raw.filter(l_freq=0.5, h_freq=100, fir_design="firwin",verbose = False)
+        raw.notch_filter(freqs=50, fir_design="firwin", verbose = False)
 
         # ----------------------------------------------------------------
         # ---- Parititioning cleaned data into 30 sec Epoch Objects  -----
@@ -122,8 +123,10 @@ def main():
         epochs.save(cleaned_epochs_fname, overwrite=True)
         logger.info(f"\nSuccessfully saved cleaned epochs to:\n{cleaned_epochs_fname}")
 
+        df_channels
+
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
 
     main()
