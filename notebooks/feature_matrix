@@ -1,0 +1,92 @@
+# List of subjects
+SUBJECT_IDS = [
+    '001', '003', '004', '006', '007', '008', '009', '010', 
+    '011', '012', '013', '014', '015', '019', '024', '025', 
+    '026', '027', '028', '029'
+]
+
+CHANNELS = ['C3:A2', 'C4:A1', 'O2:A1', 'F4:A1', 'O1:A2', 'F3:A2']
+BANDS = ['delta', 'theta', 'alpha', 'beta']
+
+# Column for target value (sleep stage)
+LABEL_COLUMN = 'label' 
+
+# Encoding sleep stages
+SLEEP_STAGE_MAPPING = {
+    'Wake': 0,
+    'N1': 1,
+    'N2': 2,
+    'N3': 3,
+    'REM': 4,
+    'Artefact': 5,
+    'A': 5    
+}
+
+# FEATURE MATRIX
+# Create the specific list of feature columns we want to extract (24 features)
+FEATURE_COLUMNS = [f"{chan}_{band}_power" for chan in CHANNELS for band in BANDS]
+
+# List to hold the dataframe for each subject
+all_subjects_data = []
+
+print(f"Target Feature Set Size: {len(FEATURE_COLUMNS)} columns.")
+print(f"Processing {len(SUBJECT_IDS)} subjects...")
+
+# Iterate over list of subject IDs
+for sub_code in SUBJECT_IDS:
+    subject_id = f"sub-{sub_code}"
+    
+    base_path = "/Users/alex/Downloads/SCIF2001_project/EEG_data/extracted_features/"
+    file_path = f"{base_path}{subject_id}_extracted_features"
+    
+    try:
+        # Load file dynamically
+        df_subject = pd.read_csv(file_path)
+        
+        # Add column to track the subject number
+        df_subject['Subject_ID'] = subject_id
+        
+        # Select the 24 columns
+        expected_full_cols = [f"{ch}_{band}_power" for ch in CHANNELS for band in BANDS]
+        present_feature_cols = [col for col in expected_full_cols if col in df_subject.columns]
+        
+        # Select data
+        selected_cols = present_feature_cols + [LABEL_COLUMN, 'Subject_ID']
+        
+        if LABEL_COLUMN not in df_subject.columns:
+             raise ValueError(f"Label column '{LABEL_COLUMN}' not found.")
+
+        df_selected = df_subject[selected_cols].copy()
+
+        all_subjects_data.append(df_selected)
+        print(f"Successfully loaded {subject_id} with {len(df_selected)} epochs.")
+
+    except Exception as e:
+        print(f"Error loading {subject_id} at {file_path}: {e}")
+        print("Skipping this subject...")
+
+# Check if data actually loaded
+if not all_subjects_data:
+    print("\nERROR: No data was loaded. Check file paths and column names.")
+else:
+    # Combine all dataframes into one  matrix
+    df_combined = pd.concat(all_subjects_data, ignore_index=True)
+
+    
+    # Data preprocessing
+    # Sleep stage mapping
+    df_combined['y_encoded'] = df_combined[LABEL_COLUMN].map(SLEEP_STAGE_MAPPING)
+    df_combined['y_encoded'] = df_combined['y_encoded'].astype(int) # convert to integer
+
+    X = df_combined[present_feature_cols].values 
+    y = df_combined['y_encoded'].values
+
+    print("\nFinal Data Size:")
+    print(f"Total Combined Epochs: {df_combined.shape[0]}")
+    print(f"Feature Matrix (X) Shape: {X.shape}")
+    print(f"Target Vector (y) Shape: {y.shape}")
+
+    print("\nSleep Stage Encoding Map:")
+    print(SLEEP_STAGE_MAPPING)
+ 
+    print("\nData Combination Complete!")
